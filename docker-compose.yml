@@ -1,0 +1,87 @@
+services:
+
+  authentication-service:
+    build: ./authentication-service
+    restart: on-failure
+    environment:
+      - JWT_SECRET=supersecretkey
+    networks:
+      - restaurant-net
+
+  order-service:
+    build: ./order-service
+    restart: always
+    environment:
+      - JWT_SECRET=supersecretkey
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - DATABASE_URL=postgresql://orders:orders@postgres:5432/orders
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - restaurant-net
+
+  payment-service:
+    build: ./payment-service
+    restart: on-failure
+    networks:
+      - restaurant-net
+
+  restaurant-service:
+    build: ./restaurant-service
+    restart: on-failure
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - restaurant-net
+
+  nginx:
+    image: nginx:alpine
+    restart: on-failure
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - authentication-service
+      - restaurant-service
+      - order-service
+      - payment-service
+    networks:
+      - restaurant-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: on-failure
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - restaurant-net
+
+  postgres:
+    image: postgres:16-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=orders
+      - POSTGRES_PASSWORD=orders
+      - POSTGRES_DB=orders
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - restaurant-net
+
+networks:
+  restaurant-net:
+
