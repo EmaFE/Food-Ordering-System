@@ -12,7 +12,7 @@ engine = create_engine(DATABASE_URL)
 
 # Models
 class Order(SQLModel, table = True):
-    id:                  Optional[int] = Field(default = None, primary_key = True)
+    id: Optional[int] = Field(default = None, primary_key = True)
     customer_id:         int
     status:              str = "pending"
     total:               float = 0.0

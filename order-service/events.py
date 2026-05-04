@@ -76,8 +76,8 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
     async with message.process():
         data = json.loads(message.body)
 
-        order_id     = data.get("order_id")
-        total        = data.get("total")
+        order_id = data.get("order_id")
+        total = data.get("total")
         item_details = data.get("items", [])
 
         logger.info(f"Items reserved for order {order_id} - attempting payment")
@@ -95,11 +95,11 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
                 order_item = session.exec(
                     select(OrderItem).where(
                         OrderItem.order_id == order_id,
-                        OrderItem.item_id  == detail["item_id"]
+                        OrderItem.item_id == detail["item_id"]
                     )
                 ).first()
                 if order_item:
-                    order_item.name  = detail["name"]
+                    order_item.name = detail["name"]
                     order_item.price = detail["price"]
 
             item_payloads = [
@@ -158,8 +158,8 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
 
                 await publish_event("release_items", {
                     "order_id": order_id,
-                    "items":    item_payloads,
-                    "reason":   reason
+                    "items": item_payloads,
+                    "reason": reason
                 })
 
 # restaurant does not have enough stock --> update order status to cancelled

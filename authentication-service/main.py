@@ -12,7 +12,7 @@ from passlib.context import CryptContext
 
 # Db and JWT config
 DATABASE_URL = "sqlite:///./customers.db"
-JWT_SECRET   = os.getenv("JWT_SECRET", "supersecretkey")
+JWT_SECRET = os.getenv("JWT_SECRET", "supersecretkey")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24
 
@@ -41,9 +41,9 @@ def create_token(customer_id: int) -> str:
 engine = create_engine(DATABASE_URL, connect_args = {"check_same_thread": False})
 
 class Customer(SQLModel, table = True):
-    id:              Optional[int] = Field(default = None, primary_key = True)
-    name:            str
-    email:           str
+    id: Optional[int] = Field(default = None, primary_key = True)
+    name: str
+    email: str
     hashed_password: str
 
 
@@ -63,24 +63,23 @@ app = FastAPI(lifespan = lifespan)
 
 # Schema
 class RegisterRequest(BaseModel):
-    name:     str
-    email:    str
+    name: str
+    email: str
     password: str
 
 class LoginRequest(BaseModel):
-    email:    str
+    email: str
     password: str
 
 
 # Hateoas
 def customer_links():
     return {
-        "menu":   {"href": "/api/restaurant/menu", "method": "GET"},
+        "menu": {"href": "/api/restaurant/menu", "method": "GET"},
     }
 
 
 # Routes
-
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "authentication-service"}
@@ -109,10 +108,10 @@ def register(request: RegisterRequest):
 
     return {
         "customer_id": customer.id,
-        "name":        customer.name,
-        "email":       customer.email,
-        "token":       token,
-        "_links":      customer_links(),
+        "name": customer.name,
+        "email": customer.email,
+        "token": token,
+        "_links": customer_links(),
     }
 
 
@@ -128,7 +127,7 @@ def login(request: LoginRequest):
 
     return {
         "customer_id": customer.id,
-        "name":        customer.name,
-        "token":       token,
-        "_links":      customer_links(),
+        "name": customer.name,
+        "token": token,
+        "_links": customer_links(),
     }

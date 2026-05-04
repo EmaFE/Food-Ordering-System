@@ -30,7 +30,7 @@ def scale(n):
         ["docker", "compose", "up", "--scale", f"order-service={n}", "-d", "--no-recreate"],
         capture_output = True
     )
-    print(f"  --> Scaled order-service to {n} instance(s)")
+    print(f"--> Scaled order-service to {n} instance(s)")
 
 
 print("Autoscaler started. Polling every 5s...\n")
