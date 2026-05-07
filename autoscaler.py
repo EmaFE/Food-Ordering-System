@@ -13,6 +13,10 @@ POLL_INTERVAL = 5
 
 current_instances = 1
 
+# Main Idea: If the "items_reserved" queue has more than 3 (SCALE_UP_THRESHOLD) messages, we scale up the order-service and payment service by one instance, up to a maximum of 2 (MAX_INSTANCES). If the queue is empty, we scale down by one instance until a minimum of 1 instance (MIN_INSTANCES)
+
+# Note: In a real-world scenario, you would likely use a more robust method to monitor and scale services like Kubernetes HPA
+
 
 def get_queue_depth():
     try:
@@ -32,7 +36,10 @@ def scale(n):
     print(f"--> Scaled order-service + payment-service to {n} instance(s)")
 
 
+# Main loop
+
 print("Autoscaler started. Polling every 5s...\n")
+
 
 while True:
     depth = get_queue_depth()

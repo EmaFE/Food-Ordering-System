@@ -87,6 +87,10 @@ def health():
 
 @app.post("/register")
 def register(request: RegisterRequest):
+    """
+    Registers a new customer. 
+    Returns new customer data + JWT needed for authentication.
+    """
     with Session(engine) as session:
         # Check if email already exists
         existing = session.exec(select(Customer).where(Customer.email == request.email)).first()
@@ -117,6 +121,10 @@ def register(request: RegisterRequest):
 
 @app.post("/login")
 def login(request: LoginRequest):
+    """
+    Logs in an existing customer.
+    Returns customer data + JWT needed for authentication.
+    """
     with Session(engine) as session:
         customer = session.exec(select(Customer).where(Customer.email == request.email)).first()
 
