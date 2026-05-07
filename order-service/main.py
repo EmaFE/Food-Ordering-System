@@ -51,7 +51,7 @@ def order_links(order_id: int, status: str):
     }
     
     if status == "pending":
-        links["cancel"] = {"href": f"/api/orders/cancel/{order_id}", "method": "POST"}
+        links["cancel"] = {"href": f"/api/orders/cancel/{order_id}", "method": "PATCH"}
     
     return links
 
@@ -154,7 +154,7 @@ def circuit_breaker_status():
     return payment_breaker.status()
 
 
-@app.post("/cancel/{order_id}")
+@app.patch("/cancel/{order_id}")
 async def cancel_order(order_id: int, authorization: Optional[str] = Header(None)):
     customer_id = get_customer_id(authorization)
 
