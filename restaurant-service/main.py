@@ -61,6 +61,10 @@ rabbitmq_channel = None
 
 
 async def connect_rabbitmq():
+    """
+    Connects to RabbitMQ with retries if not available yet.
+    Once connected, it declares all queues this services uses.
+    """
     global rabbitmq_connection, rabbitmq_channel
     
     for attempt in range(10):
@@ -85,6 +89,7 @@ async def connect_rabbitmq():
 
 
 async def publish_event(queue_name: str, payload: dict):
+    """ Publishes an event to the passed in RabbitMQ queue with the given paylaod."""
     await rabbitmq_channel.default_exchange.publish(
         aio_pika.Message(
             body = json.dumps(payload).encode(),
@@ -97,6 +102,7 @@ async def publish_event(queue_name: str, payload: dict):
 
 
 async def consume_events():
+    """Consumes events from the queue and passes them to the appropriate handler function."""
     order_created_queue = await rabbitmq_channel.get_queue("order_created")
     payment_success_queue = await rabbitmq_channel.get_queue("payment_success")
     release_items_queue = await rabbitmq_channel.get_queue("release_items")
@@ -117,6 +123,11 @@ async def handle_payment_success(message: aio_pika.IncomingMessage):
 
 
 async def handle_order_created(message: aio_pika.IncomingMessage):
+    """
+    Handles the created order by checking if all items are available.
+    If they are, it reserves them, decrases stock and publishes an "items_reserved" event with the total price.
+    If not, it publishes an "items_unavailable" event along with the reason (invalid item or insufficient stock).
+    """
     async with message.process():
         data = json.loads(message.body)
         order_id = data.get("order_id")
@@ -166,6 +177,10 @@ async def handle_order_created(message: aio_pika.IncomingMessage):
 
 
 async def handle_release_stock(message: aio_pika.IncomingMessage):
+    """
+    Adds the quantities of the items back in stock.
+    Used when an order is cancelled or the payment fails after the items had already been reserved.
+    """
     async with message.process():
         data = json.loads(message.body)
         
@@ -225,6 +240,7 @@ app = FastAPI(title = "Restaurant", lifespan = lifespan)
 
 @app.get("/menu")
 def get_menu():
+    """ Returns all available menu items with links, but no quantity - not relevant to customer"""
     with Session(engine) as session:
         items = session.exec(select(MenuItem).where(MenuItem.available == True)).all()
     
@@ -253,6 +269,7 @@ def get_stock():
 
 @app.get("/menu/{item_id}")
 def get_menu_item(item_id: int):
+    """ Returns single menu item with links but no quantity - again, not relevant to customer"""
     with Session(engine) as session:
         item = session.get(MenuItem, item_id)
     

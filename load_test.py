@@ -10,6 +10,7 @@ DELAY_BETWEEN_ORDERS = 2  # seconds between each order per user
 
 stop_event = threading.Event()
 
+# Helper functions for making HTTP requests
 
 def post(url, body):
     data = json.dumps(body).encode()
@@ -38,6 +39,7 @@ def register():
 
 
 def place_orders(token, user_id):
+    """ Continuously places orders for a user until the stop event is set. """
     order_count = 0
     while not stop_event.is_set():
         try:
@@ -48,6 +50,8 @@ def place_orders(token, user_id):
             print(f"[user-{user_id}] Order failed: {e}")
         stop_event.wait(DELAY_BETWEEN_ORDERS)
 
+
+# Main test logic
 
 print(f"Starting continuous load test with {NUM_USERS} users. Press Ctrl+C to stop.\n")
 

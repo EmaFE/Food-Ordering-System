@@ -5,15 +5,15 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 
-# failure toggle 
-# in-memory,  resets to False every time the service restarts
+# Failure toggle 
+# In-memory,  resets to False every time the service restarts
 _payment_should_fail = False
 
 
 app = FastAPI()
 
 
-# schemas
+# Schemas
 class ChargeRequest(BaseModel):
     order_id: int
     amount: float
