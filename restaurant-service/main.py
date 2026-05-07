@@ -230,7 +230,7 @@ def get_menu():
     
     return {
         "items": [
-            {**item.model_dump(), "_links": item_links(item.id)}
+            {**item.model_dump(exclude = {"quantity"}), "_links": item_links(item.id)}
             for item in items
         ],
         
@@ -259,7 +259,7 @@ def get_menu_item(item_id: int):
     if not item:
         raise HTTPException(status_code = 404, detail = "Item not found")
     
-    return {**item.model_dump(), "_links": item_links(item.id)}
+    return {**item.model_dump(exclude = {"quantity"}), "_links": item_links(item.id)}
 
 
 @app.get("/health")

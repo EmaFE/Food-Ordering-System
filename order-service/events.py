@@ -148,6 +148,9 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
                     else:
                         reason = "payment_processor_failed"
 
+                elif isinstance(e, httpx.RequestError):
+                    reason = "payment_processor_failed"
+
                 else:
                     reason = "unexpected_error"
 
