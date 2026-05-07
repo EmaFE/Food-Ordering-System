@@ -1,14 +1,13 @@
 import time
 import subprocess
 import urllib.request
-import urllib.error
 import json
 import base64
 
 RABBITMQ_API = "http://localhost:15672/api/queues/%2F/items_reserved"
 AUTH = base64.b64encode(b"guest:guest").decode()
 MIN_INSTANCES = 1
-MAX_INSTANCES = 3
+MAX_INSTANCES = 2
 SCALE_UP_THRESHOLD = 3
 POLL_INTERVAL = 5
 

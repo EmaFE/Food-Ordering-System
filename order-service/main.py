@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import List
 
 from fastapi import FastAPI, HTTPException, Header
+from typing import Optional
 from pydantic import BaseModel
 from sqlmodel import Session, select
 from jose import jwt, JWTError
@@ -21,17 +22,24 @@ JWT_ALGORITHM = "HS256"
 
 
 # helper function
-def get_customer_id(authorization: str) -> int:
-    """
-    Extract customer_id from JWT token in Authorization header.
-    """
+auth_error = {
+    "message": "Authentication required",
+    "_links": {
+        "register": {"href": "/api/authentication/register", "method": "POST"},
+        "login":    {"href": "/api/authentication/login",    "method": "POST"},
+    }
+}
+
+def get_customer_id(authorization: Optional[str]) -> int:
+    if not authorization:
+        raise HTTPException(status_code = 401, detail = auth_error)
     try:
         token = authorization.replace("Bearer ", "")
         payload = jwt.decode(token, JWT_SECRET, algorithms = [JWT_ALGORITHM])
         return int(payload["sub"])
     
     except JWTError:
-        raise HTTPException(status_code = 401, detail = "Invalid or expired token")
+        raise HTTPException(status_code = 401, detail = auth_error)
 
 
 # Hateoas
@@ -83,7 +91,7 @@ def health():
 
 
 @app.post("/")
-async def create_order(request: CreateOrderRequest, authorization: str = Header(...)):
+async def create_order(request: CreateOrderRequest, authorization: Optional[str] = Header(None)):
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
@@ -118,7 +126,7 @@ async def create_order(request: CreateOrderRequest, authorization: str = Header(
 
 # get all past orders 
 @app.get("/my-orders")
-def get_my_orders(authorization: str = Header(...)):
+def get_my_orders(authorization: Optional[str] = Header(None)):
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
@@ -147,7 +155,7 @@ def circuit_breaker_status():
 
 
 @app.post("/cancel/{order_id}")
-async def cancel_order(order_id: int, authorization: str = Header(...)):
+async def cancel_order(order_id: int, authorization: Optional[str] = Header(None)):
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
@@ -183,7 +191,7 @@ async def cancel_order(order_id: int, authorization: str = Header(...)):
 
 # get a single order information
 @app.get("/{order_id}")
-def get_order(order_id: int, authorization: str = Header(...)):
+def get_order(order_id: int, authorization: Optional[str] = Header(None)):
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:

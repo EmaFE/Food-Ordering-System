@@ -19,24 +19,17 @@ class ChargeRequest(BaseModel):
     amount: float
 
 
-# hateoas
-def payment_links(payment_id: str):
-    return {
-        "self": {"href": f"/api/payment/payments/{payment_id}", "method": "GET"},
-    }
-
-
 # Routes
 
 @app.post("/charge")
 async def charge(request: ChargeRequest):
     global _payment_should_fail
-    
+
     await asyncio.sleep(10)  # simulate payment processing delay
 
     if _payment_should_fail:
         raise HTTPException(status_code = 503, detail = "Payment processor unavailable")
-    
+
     # simulate user's payment being declined with a prob of 20%
     if random.random() < 0.2:
         raise HTTPException(status_code = 402, detail = "Payment declined")
@@ -48,7 +41,6 @@ async def charge(request: ChargeRequest):
         "order_id": request.order_id,
         "amount": request.amount,
         "status": "success",
-        "_links": payment_links(payment_id),
     }
 
 
