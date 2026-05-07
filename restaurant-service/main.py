@@ -90,7 +90,6 @@ async def publish_event(queue_name: str, payload: dict):
             body = json.dumps(payload).encode(),
             delivery_mode = aio_pika.DeliveryMode.PERSISTENT,
         ),
-        
         routing_key = queue_name,
     )
     
@@ -126,7 +125,7 @@ async def handle_order_created(message: aio_pika.IncomingMessage):
         logger.info(f"Received order_created for order {order_id}")
 
         with Session(engine) as session:
-            total          = 0.0
+            total = 0.0
             reserved_items = []
 
             for entry in items:
@@ -135,7 +134,7 @@ async def handle_order_created(message: aio_pika.IncomingMessage):
                 if not item:
                     await publish_event("items_unavailable", {
                         "order_id": order_id,
-                        "reason":   "invalid_item"
+                        "reason": "invalid_item"
                     })
                     logger.warning(f"Invalid item {entry['item_id']} in order {order_id}")
                     return
@@ -143,16 +142,16 @@ async def handle_order_created(message: aio_pika.IncomingMessage):
                 if item.quantity < entry["quantity"]:
                     await publish_event("items_unavailable", {
                         "order_id": order_id,
-                        "reason":   "insufficient_stock"
+                        "reason": "insufficient_stock"
                     })
                     logger.warning(f"Insufficient stock for order {order_id}")
                     return
 
                 total += item.price * entry["quantity"]
                 reserved_items.append({
-                    "item_id":  item.id,
-                    "name":     item.name,
-                    "price":    item.price,
+                    "item_id": item.id,
+                    "name": item.name,
+                    "price": item.price,
                     "quantity": entry["quantity"],
                 })
                 item.quantity -= entry["quantity"]
@@ -160,8 +159,8 @@ async def handle_order_created(message: aio_pika.IncomingMessage):
             session.commit()
             await publish_event("items_reserved", {
                 "order_id": order_id,
-                "total":    round(total, 2),
-                "items":    reserved_items,
+                "total": round(total, 2),
+                "items": reserved_items,
             })
             logger.info(f"Items reserved for order {order_id}")
 

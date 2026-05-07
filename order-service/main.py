@@ -45,9 +45,9 @@ def get_customer_id(authorization: Optional[str]) -> int:
 # Hateoas
 def order_links(order_id: int, status: str):
     links = {
-        "self":      {"href": f"/api/orders/{order_id}", "method": "GET"},
+        "self": {"href": f"/api/orders/{order_id}", "method": "GET"},
         "my_orders": {"href": "/api/orders/my-orders", "method": "GET"},
-        "menu":      {"href": "/api/restaurant/menu", "method": "GET"},
+        "menu": {"href": "/api/restaurant/menu", "method": "GET"},
     }
     
     if status == "pending":
@@ -71,7 +71,7 @@ app = FastAPI(lifespan = lifespan)
 
 # schemas - define what the paylod for an order request should look like
 class OrderItemRequest(BaseModel):
-    item_id:  int
+    item_id: int
     quantity: int
 
 
@@ -105,7 +105,7 @@ async def create_order(request: CreateOrderRequest, authorization: Optional[str]
         for entry in request.items:
             session.add(OrderItem(
                 order_id = order_id,
-                item_id  = entry.item_id,
+                item_id = entry.item_id,
                 quantity = entry.quantity,
             ))
 
@@ -113,14 +113,14 @@ async def create_order(request: CreateOrderRequest, authorization: Optional[str]
 
     await publish_event("order_created", {
         "order_id": order_id,
-        "items":    [{"item_id": e.item_id, "quantity": e.quantity} for e in request.items],
+        "items": [{"item_id": e.item_id, "quantity": e.quantity} for e in request.items],
     })
 
     return {
         "order_id": order_id,
-        "status":   "pending",
-        "message":  "Order received - processing started",
-        "_links":   order_links(order_id, "pending"),
+        "status": "pending",
+        "message": "Order received - processing started",
+        "_links": order_links(order_id, "pending"),
     }
 
 
