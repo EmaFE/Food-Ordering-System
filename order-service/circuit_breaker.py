@@ -5,15 +5,17 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# the three states of the CB
+# Circuit breaker's states
 class CBState(str, Enum):
     CLOSED = "CLOSED"
     OPEN = "OPEN"
     HALF_OPEN = "HALF_OPEN"
 
 
-# Cicuit breaker logic
 class CircuitBreaker:
+    """
+    Class for the circuit breaker logic in main
+    """
     def __init__(self, failure_threshold = 3, recovery_timeout = 15):
         self.state = CBState.CLOSED
         self.failure_count = 0
@@ -23,6 +25,10 @@ class CircuitBreaker:
 
 
     def _should_attempt(self):
+        """
+        Updates current state of the breaker based on time open
+        Return value is whether a call should be let through
+        """
         if self.state == CBState.CLOSED:
             return True
 
@@ -50,6 +56,7 @@ class CircuitBreaker:
         self.failure_count += 1
         self.last_failure_time = datetime.now(timezone.utc)
 
+        # Circuit breaker state is updated to open if there have been too many failures
         if self.state == CBState.HALF_OPEN or self.failure_count >= self.failure_threshold:
             logger.warning(f"[CircuitBreaker] OPEN (failures = {self.failure_count})")
             self.state = CBState.OPEN
@@ -59,6 +66,10 @@ class CircuitBreaker:
 
 
     async def call(self, coro):
+        """
+        Execture coro through circuit breaker.
+        Throws an error if there is an issue
+        """
         if not self._should_attempt():
             raise RuntimeError("Circuit breaker is OPEN - Payment service unavailable")
         
