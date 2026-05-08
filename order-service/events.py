@@ -23,6 +23,10 @@ payment_breaker = CircuitBreaker(failure_threshold = 3, recovery_timeout = 15)
 
 
 async def connect_rabbitmq():
+    """
+    Attempts to make a connection to the rabbitMQ queue.
+    Attempts every 3 seconds, 10 times.
+    """
     global rabbitmq_connection, rabbitmq_channel
 
     for attempt in range(10):
@@ -46,6 +50,9 @@ async def connect_rabbitmq():
 
 
 async def publish_event(queue_name: str, payload: dict):
+    """
+    Publishes an event to the rabbitMQ queue
+    """
     await rabbitmq_channel.default_exchange.publish(
         aio_pika.Message(
             body = json.dumps(payload).encode(),
@@ -59,7 +66,10 @@ async def publish_event(queue_name: str, payload: dict):
 
 
 async def consume_events():
-    # define which queues to listen to
+    """
+    Defines handlers for each queue
+    Called at startup
+    """
     items_reserved_queue = await rabbitmq_channel.get_queue("items_reserved")
     items_unavailable_queue = await rabbitmq_channel.get_queue("items_unavailable")
 
@@ -69,10 +79,14 @@ async def consume_events():
     logger.info("Order Service listening for events")
 
 
-# message handlers
+# --- Message Handlers
 
-# triggered when restaurant confirms items were reserved (in stock)
 async def handle_items_reserved(message: aio_pika.IncomingMessage):
+    """
+    Handles items from orders being reserved from the restaurant service
+    If the items are available, order is placed on the payment service through
+    circuit breaker.
+    """
     async with message.process():
         data = json.loads(message.body)
 
@@ -109,7 +123,7 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
 
             session.commit()
 
-            # call payment service via circuit breaker
+            # Call payment service via circuit breaker
             try:
                 async with httpx.AsyncClient() as client:
                     async def do_payment():
@@ -124,7 +138,7 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
 
                     result = await payment_breaker.call(do_payment())
 
-                # payment succeeds --> update order status to confirmed, publish payment_success message
+                # Payment succeeds -> update order status to confirmed, publish payment_success message
                 order.status = "confirmed"
                 order.payment_id = result.get("payment_id")
                 session.add(order)
@@ -133,12 +147,9 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
                 await publish_event("payment_success", {"order_id": order_id})
                 logger.info(f"Payment successful for order {order_id}")
 
-            # payment fails --> update order status to cancelled, publish payment_failed message with items so restaurant can release stock
-
+            # Payment fails --> update order status to cancelled, publish payment_failed message with items so restaurant can release stock
             except Exception as e:
                 logger.error(f"Payment failed for order {order_id}: {e}")
-                
-                # determine reason
                 if isinstance(e, RuntimeError): # CB is OPEN
                     reason = "payment_processor_failed"
 
@@ -165,8 +176,11 @@ async def handle_items_reserved(message: aio_pika.IncomingMessage):
                     "reason": reason
                 })
 
-# restaurant does not have enough stock --> update order status to cancelled
+
 async def handle_items_unavailable(message: aio_pika.IncomingMessage):
+    """
+    If restaurant says items are not available -> cancel order
+    """
     async with message.process():
         data = json.loads(message.body)
         order_id = data.get("order_id")

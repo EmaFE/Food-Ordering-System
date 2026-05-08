@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 JWT_SECRET = os.getenv("JWT_SECRET", "supersecretkey")
 JWT_ALGORITHM = "HS256"
 
+# --- Helper functions ---
 
-# helper function
 auth_error = {
     "message": "Authentication required",
     "_links": {
@@ -31,8 +31,12 @@ auth_error = {
 }
 
 def get_customer_id(authorization: Optional[str]) -> int:
+    """
+    Extract customer_id from JWT token in Authorization header.
+    """
     if not authorization:
         raise HTTPException(status_code = 401, detail = auth_error)
+
     try:
         token = authorization.replace("Bearer ", "")
         payload = jwt.decode(token, JWT_SECRET, algorithms = [JWT_ALGORITHM])
@@ -42,8 +46,13 @@ def get_customer_id(authorization: Optional[str]) -> int:
         raise HTTPException(status_code = 401, detail = auth_error)
 
 
-# Hateoas
 def order_links(order_id: int, status: str):
+    """
+    Builds links object for an order response.
+    HATEOAS cancel is only referenced in "pending" orders, 
+    as they cannot be cancelled after payment
+    This being a method helps keep consistency for HATEOAS
+    """
     links = {
         "self": {"href": f"/api/orders/{order_id}", "method": "GET"},
         "my_orders": {"href": "/api/orders/my-orders", "method": "GET"},
@@ -59,27 +68,34 @@ def order_links(order_id: int, status: str):
 # lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    FastAPI lifespan handler. 
+    Opens database and connections at startup 
+    then serves requests to the queue.
+    """
     create_db()
     await connect_rabbitmq()
     await consume_events()
     yield
 
 
-# application
+# Instantiate app
 app = FastAPI(lifespan = lifespan)
 
 
-# schemas - define what the paylod for an order request should look like
+# Payload schemas
 class OrderItemRequest(BaseModel):
+    # Stores a single set of items in the order post
     item_id: int
     quantity: int
 
 
 class CreateOrderRequest(BaseModel):
+    # Request body contains the entire order
     items: List[OrderItemRequest]
 
 
-# Routes
+# --- Routes ---
 
 @app.get("/health")
 def health():
@@ -92,6 +108,11 @@ def health():
 
 @app.post("/")
 async def create_order(request: CreateOrderRequest, authorization: Optional[str] = Header(None)):
+    """
+    Called when a user is placing an order:
+    Puts an order into the database then publishes the order
+    to the queue through events
+    """
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
@@ -127,6 +148,10 @@ async def create_order(request: CreateOrderRequest, authorization: Optional[str]
 # get all past orders 
 @app.get("/my-orders")
 def get_my_orders(authorization: Optional[str] = Header(None)):
+    """
+    Retreives all previously placed orders by a customer
+    All orders include relevant HATEOAS links
+    """
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
@@ -150,12 +175,17 @@ def circuit_breaker_status():
     """
     Check circuit breaker state (for demo).
     """
-    payment_breaker._should_attempt() # force check, triggers OPEN --> HALF_OPEN transition if timeout elapses
+    payment_breaker._should_attempt() 
     return payment_breaker.status()
 
 
 @app.patch("/cancel/{order_id}")
 async def cancel_order(order_id: int, authorization: Optional[str] = Header(None)):
+    """
+    Attempts to cancel an order
+    If it succeeds, update db and release items in restaurants
+    If failure, throws error 
+    """
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
@@ -189,9 +219,11 @@ async def cancel_order(order_id: int, authorization: Optional[str] = Header(None
     }
 
 
-# get a single order information
 @app.get("/{order_id}")
 def get_order(order_id: int, authorization: Optional[str] = Header(None)):
+    """
+    Retrieves a single order's information
+    """
     customer_id = get_customer_id(authorization)
 
     with Session(engine) as session:
