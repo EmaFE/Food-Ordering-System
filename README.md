@@ -2,6 +2,8 @@
 
 A distributed food ordering system built as part of COMP30220 Assignment.
 
+Link to report: https://docs.google.com/document/d/1hddA38j8OQTGtCt_fzh6-6gBzNPcQ4w3Opi0XpxHB4g/edit?usp=sharing
+
 ## Requirements
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
