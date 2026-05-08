@@ -38,7 +38,7 @@ def initialize_menu(session: Session):
         MenuItem(name = "Margherita Pizza", description = "Classic tomato and mozzarella", price = 12.99, quantity = 500),
         MenuItem(name = "Pepperoni Pizza", description = "Loaded with pepperoni", price = 14.99, quantity = 700),
         MenuItem(name = "Caesar Salad", description = "Crispy romaine and parmesan", price = 8.99,  quantity = 120),
-        MenuItem(name = "Garlic Bread", description = "Toasted with herb butter", price = 4.99,  quantity = 600),
+        MenuItem(name = "Garlic Bread", description = "Toasted with herb butter", price = 4.99,  quantity = 400),
         MenuItem(name = "Tiramisu", description = "Classic Italian dessert", price = 6.99,  quantity = 500),
         MenuItem(name = "Soft Drink", description = "Coke, Fanta or Sprite", price = 2.99,  quantity = 1000),
     ]

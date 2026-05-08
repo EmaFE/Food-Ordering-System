@@ -5,6 +5,7 @@ A distributed food ordering system built as part of COMP30220 Assignment.
 ## Requirements
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
+- [Postman](https://www.postman.com/downloads/) (optional for manual API testing via the included collection)
 
 ---
 
@@ -78,7 +79,7 @@ curl http://localhost:8080/api/orders/circuit-breaker/status
 
 ## 3. Interacting via Postman
 
-We suggest using the Postman collection to interact with the system over curl since it has all requests already prepared with the correct endpoints, headers, and example bodies. Import the collection from the repository, and start with **Register** to obtain a token.
+We suggest using Postman to interact with the system over curl. Import the postman_collection_for_testing.json from the repository, which already has all requests prepared with the correct endpoints, headers, and example bodies into Postman Start with registration to obtain a token for subsequent requests. Add this token to Headers, with Key: Authorization and Value: Bearer <your_token> 
 
 ---
 
