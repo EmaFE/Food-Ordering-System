@@ -35,12 +35,12 @@ def initialize_menu(session: Session):
         return
     
     items = [
-        MenuItem(name = "Margherita Pizza", description = "Classic tomato and mozzarella", price = 12.99, quantity = 20),
-        MenuItem(name = "Pepperoni Pizza", description = "Loaded with pepperoni", price = 14.99, quantity = 15),
-        MenuItem(name = "Caesar Salad", description = "Crispy romaine and parmesan", price = 8.99,  quantity = 25),
-        MenuItem(name = "Garlic Bread", description = "Toasted with herb butter", price = 4.99,  quantity = 30),
-        MenuItem(name = "Tiramisu", description = "Classic Italian dessert", price = 6.99,  quantity = 10),
-        MenuItem(name = "Soft Drink", description = "Coke, Fanta or Sprite", price = 2.99,  quantity = 50),
+        MenuItem(name = "Margherita Pizza", description = "Classic tomato and mozzarella", price = 12.99, quantity = 500),
+        MenuItem(name = "Pepperoni Pizza", description = "Loaded with pepperoni", price = 14.99, quantity = 700),
+        MenuItem(name = "Caesar Salad", description = "Crispy romaine and parmesan", price = 8.99,  quantity = 120),
+        MenuItem(name = "Garlic Bread", description = "Toasted with herb butter", price = 4.99,  quantity = 600),
+        MenuItem(name = "Tiramisu", description = "Classic Italian dessert", price = 6.99,  quantity = 500),
+        MenuItem(name = "Soft Drink", description = "Coke, Fanta or Sprite", price = 2.99,  quantity = 1000),
     ]
     
     for item in items:
